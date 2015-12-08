@@ -1,0 +1,20 @@
+{
+  "name": "css-in-js-loader",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "peerDependencies": {
+    "webpack": "^1.12.9"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/nthtran/css-in-js-loader.git"
+  },
+  "author": "Nathan Tran",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nthtran/css-in-js-loader/issues"
+  },
+  "homepage": "https://github.com/nthtran/css-in-js-loader#readme"
+}
