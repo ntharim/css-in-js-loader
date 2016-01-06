@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {},
   "peerDependencies": {
+    "postcss": "^5.0.14",
+    "postcss-js": "^0.1.1",
     "webpack": "^1.12.9"
   },
   "repository": {

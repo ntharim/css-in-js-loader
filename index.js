@@ -1,20 +1,40 @@
+var path = require('path');
+var fs = require('fs');
+var postcss = require('postcss');
+var postcssJs = require('postcss-js');
 var NodeTemplatePlugin = require('webpack/lib/node/NodeTemplatePlugin');
 var NodeTargetPlugin = require('webpack/lib/node/NodeTargetPlugin');
 var LibraryTemplatePlugin = require('webpack/lib/LibraryTemplatePlugin');
 var SingleEntryPlugin = require('webpack/lib/SingleEntryPlugin');
 var LimitChunkCountPlugin = require('webpack/lib/optimize/LimitChunkCountPlugin');
 
-module.exports = function () {
+module.exports = function (source) {
   if(this.cacheable) this.cacheable();
-  var request = this.request.split('!').slice(this.loaderIndex + 1).join('!');
+  return source;
+};
+
+module.exports.pitch = function (request, prevRequest) {
+  if(this.cacheable) this.cacheable();
+  var callback = this.async();
+  if (path.extname(request) === '.js') {
+    produce(this, request, callback);
+  } else {
+    var parts = request.split('!');
+    var filename = parts[parts.length - 1];
+    this.addDependency(filename);
+    fs.readFile(filename, 'utf8', callback);
+  }
+};
+
+function produce(loader, request, callback) {
   var childFilename = 'css-in-js-output-filename';
   var outputOptions = { filename: childFilename };
-  var childCompiler = getRootCompilation(this)
+  var childCompiler = getRootCompilation(loader)
       .createChildCompiler('css-in-js-compiler', outputOptions);
   childCompiler.apply(new NodeTemplatePlugin(outputOptions));
   childCompiler.apply(new LibraryTemplatePlugin(null, 'commonjs2'));
   childCompiler.apply(new NodeTargetPlugin());
-  childCompiler.apply(new SingleEntryPlugin(this.context, '!!' + request));
+  childCompiler.apply(new SingleEntryPlugin(loader.context, '!!' + request));
   childCompiler.apply(new LimitChunkCountPlugin({ maxChunks: 1 }));
   var subCache = 'subcache ' + __dirname + ' ' + request;
   childCompiler.plugin('compilation', function(compilation) {
@@ -45,7 +65,6 @@ module.exports = function () {
       callback();
   });
 
-  var callback = this.async();
   childCompiler.runAsChild(function(err, entries, compilation) {
       if(err) return callback(err);
 
@@ -56,27 +75,29 @@ module.exports = function () {
           return callback(new Error("Didn't get a result from child compiler"));
       }
       compilation.fileDependencies.forEach(function(dep) {
-          this.addDependency(dep);
-      }, this);
+          loader.addDependency(dep);
+      }, loader);
       compilation.contextDependencies.forEach(function(dep) {
-          this.addContextDependency(dep);
-      }, this);
+          loader.addContextDependency(dep);
+      }, loader);
       try {
-          var exports = this.exec(source, request);
+          var exports = loader.exec(source, request);
           if (exports.default && typeof exports.default === 'object') {
             exports = exports.default;
           }
-          var text = "\nmodule.exports = " + JSON.stringify(exports) + ";";
       } catch(e) {
           return callback(e);
       }
-      if (text) {
-        callback(null, text);
+      if (exports) {
+        postcss().process(exports, { parser: postcssJs })
+          .then(function (res) {
+            callback(null, res.css);
+          });
       } else {
         callback();
       }
-  }.bind(this));
-};
+  });
+}
 
 function getRootCompilation(loader) {
   var compiler = loader._compiler;
