@@ -27,3 +27,20 @@ Example webpack configuration:
   ],
 }
 ```
+
+Now you can write CSS in JS:
+
+```js
+import { minWidth } from './utils/media';
+import { lap } from './breakpoints';
+
+export default {  
+  '.root': {
+    background: 'blue',
+
+    [minWidth(lap)]: {
+      background: 'red',
+    },
+  },
+};
+```

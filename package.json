@@ -9,6 +9,13 @@
     "postcss-js": "^0.1.1",
     "webpack": "^1.12.9"
   },
+  "keywords": [
+    "webpack",
+    "css",
+    "js",
+    "postcss",
+    "css in js"
+  ],
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/nthtran/css-in-js-loader.git"
