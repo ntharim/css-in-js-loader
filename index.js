@@ -16,7 +16,7 @@ module.exports = function (source) {
 module.exports.pitch = function (request, prevRequest) {
   if(this.cacheable) this.cacheable();
   var callback = this.async();
-  if (path.extname(request) === '.js') {
+  if (['.js', '.ts'].indexOf(path.extname(request)) >= 0) {
     produce(this, request, callback);
   } else {
     var parts = request.split('!');
